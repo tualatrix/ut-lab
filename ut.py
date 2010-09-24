@@ -4,6 +4,27 @@ import gtk
 from lib import graphics
 from lib.pytweener import Easing
 
+class HoverSprite(graphics.Sprite):
+    def __init__(self):
+        graphics.Sprite.__init__(self, x=70, y=40, interactive=True)
+
+        self.fill = "#999"
+        self.width = 100
+        self.height = 20
+        self.connect("on-mouse-over", self.on_mouse_over)
+        self.connect("on-mouse-out", self.on_mouse_out)
+        self.connect("on-render", self.on_render)
+
+    def on_render(self, sprite):
+        self.graphics.rectangle(0, 0, self.width, self.height, 3)
+        self.graphics.fill(self.fill)
+
+    def on_mouse_over(self, sprite):
+        self.fill = "#f00" # set to red on hover
+
+    def on_mouse_out(self, sprite):
+        self.fill = "#999" # set back the color once the mouse leaves area
+
 class Scene(graphics.Scene):
     def __init__(self):
         graphics.Scene.__init__(self)
@@ -19,12 +40,13 @@ class Scene(graphics.Scene):
         icon = graphics.Image("3.png")
         self.add_child(icon) # remember to add sprites to the scene
         
-        style = self.style
-        base, fg, bg, text = style.base, style.fg, style.bg, style.text
-        color = str(text[gtk.STATE_NORMAL])
-        label = graphics.Label("Ubuntu Tweak", 24, '#fff', x = 120, y = 5, interactive=True)
-        label.connect('on-click', self.on_text_click)
-        self.add_child(label) # remember to add sprites to the scene
+#        style = self.style
+#        base, fg, bg, text = style.base, style.fg, style.bg, style.text
+#        color = str(text[gtk.STATE_NORMAL])
+#        label = graphics.Label("Ubuntu Tweak", 12, '#fff', x = 70, y = 5, interactive=True)
+#        label.connect('on-click', self.on_text_click)
+#        self.add_child(label) # remember to add sprites to the scene
+        self.add_child(HoverSprite())
 
     def on_icon_click(self, sprite, event):
         if not sprite: return #ignore blank clicks

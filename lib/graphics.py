@@ -1338,10 +1338,15 @@ class Scene(gtk.DrawingArea):
         w, h = 0, 0
         t_w, t_h = 0, 0
         for sprite in self.all_sprites():
-            if hasattr(sprite, 'width') and hasattr(sprite, 'height'):
-                t_w, t_h = sprite.width + sprite.x, sprite.height + sprite.y
-            else:
-                t_w, t_h = sprite.size + sprite.x, sprite.size + sprite.y
+            try:
+                if hasattr(sprite, 'width') and hasattr(sprite, 'height'):
+                    t_w, t_h = sprite.width + sprite.x, sprite.height + sprite.y
+                else:
+                    t_w, t_h = sprite.size + sprite.x, sprite.size + sprite.y
+            except Exception, e:
+                print e
+                import pdb
+                pdb.set_trace()
             if t_w > w:
                 w = t_w
             if t_h > h:
