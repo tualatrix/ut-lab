@@ -2,14 +2,20 @@
 # - coding: utf-8 -
 import gtk
 import pango
+import cairo
 from lib import graphics
 from lib.pytweener import Easing
 
-class HoverSprite(graphics.Sprite):
-    def __init__(self, text):
-        graphics.Sprite.__init__(self, x=70, y=40, interactive=True)
+class Menu(graphics.Sprite):
+    def __init__(self, text, icon=None, **kwargs):
+        graphics.Sprite.__init__(self, interactive=True, **kwargs)
 
         self.text = text
+        self.image_data = None
+        self.theme = gtk.icon_theme_get_default()
+        self.icon_name = icon
+
+        self._surface = None
         self._style = gtk.MenuItem().rc_get_style()
 
         self.font_desc = pango.FontDescription(gtk.Style().font_desc.to_string())
@@ -26,11 +32,45 @@ class HoverSprite(graphics.Sprite):
         self.connect("on-render", self.on_render)
 
     def on_render(self, sprite):
+        print 'on_render'
         self.graphics.rectangle(0, 0, self.width, self.height, 3)
         self.graphics.fill(self.fill)
 
         self.graphics.set_color(self.text_color)
-        self.graphics.show_layout(self.text, self.font_desc)
+        self.graphics.show_layout(self.text, self.font_desc, 24)
+
+    def __setattr__(self, name, val):
+        graphics.Sprite.__setattr__(self, name, val)
+        if name == 'icon_name':
+            if self.__dict__.get('icon_name'):
+                self.image_data = self.theme.load_icon(self.icon_name, 24, 0)
+            else:
+                self.image_data = None
+
+    def _draw(self, context, opacity = 1):
+        if self.image_data is None or self.width is None or self.height is None:
+            return
+
+        if not self._surface:
+            # caching image on surface similar to the target
+            self._surface = context.get_target().create_similar(cairo.CONTENT_COLOR_ALPHA,
+                                                               self.image_data.get_width(),
+                                                               self.image_data.get_height())
+
+
+            local_context = gtk.gdk.CairoContext(cairo.Context(self._surface))
+            if isinstance(self.image_data, gtk.gdk.Pixbuf):
+                local_context.set_source_pixbuf(self.image_data, 0, 0)
+            else:
+                local_context.set_source_surface(self.image_data)
+            local_context.paint()
+
+            # add instructions with the resulting surface
+            self.graphics.set_source_surface(self._surface)
+            self.graphics.paint()
+            self.graphics.rectangle(0, 0, self.width, self.height)
+
+        graphics.Sprite._draw(self,  context, opacity)
 
     def on_mouse_over(self, sprite):
         self.fill = self.over # set to red on hover
@@ -61,7 +101,11 @@ class Scene(graphics.Scene):
 #        label = graphics.Label("Ubuntu Tweak", 12, '#fff', x = 70, y = 5, interactive=True)
 #        label.connect('on-click', self.on_text_click)
 #        self.add_child(label) # remember to add sprites to the scene
-        self.add_child(HoverSprite('Overview'))
+        menu1 = Menu('Overview', icon='gnome-app-install', x=70, y=40)
+        self.add_child(menu1)
+
+        menu2 = Menu('Application', x=160, y=40)
+        self.add_child(menu2)
 
     def on_icon_click(self, sprite, event):
         if not sprite: return #ignore blank clicks
