@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # - coding: utf-8 -
 import gtk
+import pango
 from lib import graphics
 from lib.pytweener import Easing
 
@@ -8,7 +9,15 @@ class HoverSprite(graphics.Sprite):
     def __init__(self):
         graphics.Sprite.__init__(self, x=70, y=40, interactive=True)
 
-        self.fill = "#999"
+        self._style = gtk.MenuItem().rc_get_style()
+
+        self.font_desc = pango.FontDescription(gtk.Style().font_desc.to_string())
+        self.font_desc.set_size(12 * pango.SCALE)
+
+        self.fill = self._style.bg[gtk.STATE_NORMAL]
+        self.over = self._style.bg[gtk.STATE_SELECTED]
+        self.out = self._style.bg[gtk.STATE_NORMAL]
+        self.text = self._style.text[gtk.STATE_NORMAL]
         self.width = 100
         self.height = 20
         self.connect("on-mouse-over", self.on_mouse_over)
@@ -19,11 +28,16 @@ class HoverSprite(graphics.Sprite):
         self.graphics.rectangle(0, 0, self.width, self.height, 3)
         self.graphics.fill(self.fill)
 
+        self.graphics.set_color(self.text)
+        self.graphics.show_layout('Overview', self.font_desc)
+
     def on_mouse_over(self, sprite):
-        self.fill = "#f00" # set to red on hover
+        self.fill = self.over # set to red on hover
+        self.text = self._style.text[gtk.STATE_SELECTED]
 
     def on_mouse_out(self, sprite):
-        self.fill = "#999" # set back the color once the mouse leaves area
+        self.fill = self.out # set back the color once the mouse leaves area
+        self.text = self._style.text[gtk.STATE_NORMAL]
 
 class Scene(graphics.Scene):
     def __init__(self):
