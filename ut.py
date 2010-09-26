@@ -25,10 +25,11 @@ class Menu(graphics.Sprite):
         self.over = self._style.bg[gtk.STATE_SELECTED]
         self.out = self._style.bg[gtk.STATE_NORMAL]
         self.text_color = self._style.text[gtk.STATE_NORMAL]
-        self.width = 100
-        self.height = 20
+        self.width = 120
+        self.height = 24
         self.connect("on-mouse-over", self.on_mouse_over)
         self.connect("on-mouse-out", self.on_mouse_out)
+        self.connect('on-click', self.on_button_press_event)
         self.connect("on-render", self.on_render)
 
     def on_render(self, sprite):
@@ -36,8 +37,12 @@ class Menu(graphics.Sprite):
         self.graphics.rectangle(0, 0, self.width, self.height, 3)
         self.graphics.fill(self.fill)
 
+        self.graphics.move_to(26, 0)
         self.graphics.set_color(self.text_color)
         self.graphics.show_layout(self.text, self.font_desc, 24)
+
+        self.graphics.set_source_pixbuf(self.image_data, 0, 0)
+        self.graphics.paint()
 
     def __setattr__(self, name, val):
         graphics.Sprite.__setattr__(self, name, val)
@@ -47,30 +52,8 @@ class Menu(graphics.Sprite):
             else:
                 self.image_data = None
 
-    def _draw(self, context, opacity = 1):
-        if self.image_data is None or self.width is None or self.height is None:
-            return
-
-        if not self._surface:
-            # caching image on surface similar to the target
-            self._surface = context.get_target().create_similar(cairo.CONTENT_COLOR_ALPHA,
-                                                               self.image_data.get_width(),
-                                                               self.image_data.get_height())
-
-
-            local_context = gtk.gdk.CairoContext(cairo.Context(self._surface))
-            if isinstance(self.image_data, gtk.gdk.Pixbuf):
-                local_context.set_source_pixbuf(self.image_data, 0, 0)
-            else:
-                local_context.set_source_surface(self.image_data)
-            local_context.paint()
-
-            # add instructions with the resulting surface
-            self.graphics.set_source_surface(self._surface)
-            self.graphics.paint()
-            self.graphics.rectangle(0, 0, self.width, self.height)
-
-        graphics.Sprite._draw(self,  context, opacity)
+    def on_button_press_event(self, widget, event):
+        pass
 
     def on_mouse_over(self, sprite):
         self.fill = self.over # set to red on hover
@@ -104,7 +87,7 @@ class Scene(graphics.Scene):
         menu1 = Menu('Overview', icon='gnome-app-install', x=70, y=40)
         self.add_child(menu1)
 
-        menu2 = Menu('Application', x=160, y=40)
+        menu2 = Menu('Application', icon='ubuntu-tweak', x=200, y=40)
         self.add_child(menu2)
 
     def on_icon_click(self, sprite, event):

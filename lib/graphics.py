@@ -170,7 +170,6 @@ class Graphics(object):
     def restore_context(self):
         self._add_instruction(self._restore_context)
 
-
     @staticmethod
     def _clip(context): context.clip()
     def clip(self):
