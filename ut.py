@@ -10,12 +10,6 @@ class Menu(graphics.Sprite):
     def __init__(self, text, icon=None, **kwargs):
         graphics.Sprite.__init__(self, interactive=True, **kwargs)
 
-        self.text = text
-        self.image_data = None
-        self.theme = gtk.icon_theme_get_default()
-        self.icon_name = icon
-
-        self._surface = None
         self._style = gtk.MenuItem().rc_get_style()
 
         self.font_desc = pango.FontDescription(gtk.Style().font_desc.to_string())
@@ -27,41 +21,45 @@ class Menu(graphics.Sprite):
         self.text_color = self._style.text[gtk.STATE_NORMAL]
         self.width = 120
         self.height = 24
+
+        self.icon_sprite = graphics.Icon(icon)
+        self.add_child(self.icon_sprite)
+
+        self.label_sprite = graphics.Label(text, color=self.text_color, x=26)
+        self.add_child(self.label_sprite)
+        self._over = False
+        self._clicked = False
+
         self.connect("on-mouse-over", self.on_mouse_over)
         self.connect("on-mouse-out", self.on_mouse_out)
         self.connect('on-click', self.on_button_press_event)
         self.connect("on-render", self.on_render)
 
     def on_render(self, sprite):
-        print 'on_render'
-        self.graphics.rectangle(0, 0, self.width, self.height, 3)
-        self.graphics.fill(self.fill)
+        if self._over or self._clicked:
+            pat = cairo.LinearGradient (0, 0,  0, self.height)
+            pat.add_color_stop_rgba (0, 0, 0, 0, 0)
+            pat.add_color_stop_rgba (1, self.over.red_float, self.over.green_float, self.over.blue_float, 0.5)
 
-        self.graphics.move_to(26, 0)
-        self.graphics.set_color(self.text_color)
-        self.graphics.show_layout(self.text, self.font_desc, 24)
-
-        self.graphics.set_source_pixbuf(self.image_data, 0, 0)
-        self.graphics.paint()
-
-    def __setattr__(self, name, val):
-        graphics.Sprite.__setattr__(self, name, val)
-        if name == 'icon_name':
-            if self.__dict__.get('icon_name'):
-                self.image_data = self.theme.load_icon(self.icon_name, 24, 0)
-            else:
-                self.image_data = None
+            self.graphics.rectangle(0, 0, self.width, self.height, 3)
+            self.graphics.set_source(pat)
+            self.graphics.fill()
+        else:
+            self.graphics.rectangle(0, 0, self.width, self.height, 3)
+            self.graphics.fill(self.out)
 
     def on_button_press_event(self, widget, event):
-        pass
+        self._clicked = not self._clicked
 
     def on_mouse_over(self, sprite):
         self.fill = self.over # set to red on hover
-        self.text_color = self._style.text[gtk.STATE_SELECTED]
+        self._over = True
+        self.label_sprite.color = self._style.text[gtk.STATE_SELECTED]
 
     def on_mouse_out(self, sprite):
         self.fill = self.out # set back the color once the mouse leaves area
-        self.text_color = self._style.text[gtk.STATE_NORMAL]
+        self._over = False
+        self.label_sprite.color = self._style.text[gtk.STATE_NORMAL]
 
 class Scene(graphics.Scene):
     def __init__(self):
